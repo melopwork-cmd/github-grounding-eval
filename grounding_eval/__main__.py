@@ -30,6 +30,7 @@ def main() -> int:
     parser.add_argument("--min-grounded", type=float, default=0, help="Fail below this fraction (0 to 1)")
     parser.add_argument("--min-abstention", type=float, default=0, help="Minimum grounded fraction for abstentions (0 to 1)")
     parser.add_argument("--format", choices=("json", "text"), default="json")
+    parser.add_argument("--output", type=Path, help="write the report to this file instead of stdout")
     args = parser.parse_args()
     if not 0 <= args.min_grounded <= 1:
         parser.error("--min-grounded must be between 0 and 1")
@@ -55,19 +56,28 @@ def main() -> int:
         parser.error("--min-abstention requires at least one abstention case")
     digests = {"source_sha256": source_sha256, "cases_sha256": cases_sha256, "replies_sha256": replies_sha256}
     if args.format == "text":
-        for name, counts in {"overall": totals, **by_case_type}.items():
-            print(f"{name}: {counts['correct']}/{counts['total']} correct, {counts['grounded']}/{counts['total']} grounded")
-        for name, digest in digests.items():
-            print(f"{name}: {digest}")
-        for result in results:
-            print(f"{result.id}: {result.reason}")
+        lines = [
+            f"{name}: {counts['correct']}/{counts['total']} correct, {counts['grounded']}/{counts['total']} grounded"
+            for name, counts in {"overall": totals, **by_case_type}.items()
+        ]
+        lines.extend(f"{name}: {digest}" for name, digest in digests.items())
+        lines.extend(f"{result.id}: {result.reason}" for result in results)
+        report = "\n".join(lines)
     else:
-        print(json.dumps({
+        report = json.dumps({
             **totals,
             "by_case_type": by_case_type,
             **digests,
             "results": [asdict(result) for result in results],
-        }, indent=2))
+        }, indent=2)
+    if args.output is None:
+        print(report)
+    else:
+        try:
+            with args.output.open("x", encoding="utf-8", newline="\n") as file:
+                file.write(report + "\n")
+        except OSError as error:
+            parser.error(str(error))
     below_grounded = totals["grounded"] / totals["total"] < args.min_grounded
     below_abstention = (abstentions["total"] > 0
                         and abstentions["grounded"] / abstentions["total"] < args.min_abstention)

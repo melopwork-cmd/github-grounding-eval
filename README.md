@@ -48,3 +48,5 @@ Use `--format text` for a terminal summary of case counts and results. The defau
 Both report formats include `source_sha256`, the SHA-256 of the exact evidence snapshot file used to evaluate replies.
 
 `cases_sha256` and `replies_sha256` identify the exact case and reply files used for a run.
+
+Use `--output report.json` or `--format text --output report.txt` to store a report in a new file. Reports are saved even when a threshold fails.
