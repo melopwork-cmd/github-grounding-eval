@@ -46,3 +46,5 @@ Use `--format text` for a terminal summary of case counts and results. The defau
 `--min-abstention FRACTION` independently checks the grounded rate for cases requiring abstention. A positive threshold requires at least one such case.
 
 Both report formats include `source_sha256`, the SHA-256 of the exact evidence snapshot file used to evaluate replies.
+
+`cases_sha256` and `replies_sha256` identify the exact case and reply files used for a run.

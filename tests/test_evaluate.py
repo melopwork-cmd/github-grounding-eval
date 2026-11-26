@@ -73,6 +73,8 @@ class GroundingTests(unittest.TestCase):
         report = json.loads(result.stdout)
         snapshot = (root / "fixtures/repositories.json").read_bytes()
         self.assertEqual(report["source_sha256"], sha256(snapshot).hexdigest())
+        for key, name in (("cases_sha256", "fixtures/cases.json"), ("replies_sha256", "examples/replies.json")):
+            self.assertEqual(report[key], sha256((root / name).read_bytes()).hexdigest())
         self.assertEqual((report["total"], report["correct"], report["grounded"]), (7, 6, 5))
         self.assertEqual(report["by_case_type"], {
             "answerable": {"total": 5, "correct": 4, "grounded": 3},
