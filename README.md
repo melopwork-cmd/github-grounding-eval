@@ -11,7 +11,7 @@ python -m grounding_eval examples/replies.json
 python -m unittest discover -s tests -v
 ~~~
 
-The included example has 7 answers, 6 correct answers, and 5 grounded answers. One example cites an unrelated repository and one gives the wrong license. The last two questions exercise abstention when a fact is absent from the snapshot.
+The included example has 7 answers, 6 correct answers, and 5 grounded answers. One example cites an unrelated repository and one gives the wrong license. The last two questions exercise abstention when a fact is absent from the snapshot. The JSON report includes separate counts for answerable cases and cases that require abstention.
 
 To gate a run in CI, add --min-grounded followed by a fraction between 0 and 1. For example, a threshold of 0.8 fails the supplied example.
 
