@@ -26,6 +26,7 @@ def main() -> int:
     parser.add_argument("--cases", type=Path, default=Path("fixtures/cases.json"))
     parser.add_argument("--sources", type=Path, default=Path("fixtures/repositories.json"))
     parser.add_argument("--min-grounded", type=float, default=0, help="Fail below this fraction (0 to 1)")
+    parser.add_argument("--format", choices=("json", "text"), default="json")
     args = parser.parse_args()
     if not 0 <= args.min_grounded <= 1:
         parser.error("--min-grounded must be between 0 and 1")
@@ -40,11 +41,18 @@ def main() -> int:
         grouped[kind].append(result)
 
     totals = summarize(results)
-    print(json.dumps({
-        **totals,
-        "by_case_type": {name: summarize(group) for name, group in grouped.items()},
-        "results": [asdict(result) for result in results],
-    }, indent=2))
+    by_case_type = {name: summarize(group) for name, group in grouped.items()}
+    if args.format == "text":
+        for name, counts in {"overall": totals, **by_case_type}.items():
+            print(f"{name}: {counts['correct']}/{counts['total']} correct, {counts['grounded']}/{counts['total']} grounded")
+        for result in results:
+            print(f"{result.id}: {result.reason}")
+    else:
+        print(json.dumps({
+            **totals,
+            "by_case_type": by_case_type,
+            "results": [asdict(result) for result in results],
+        }, indent=2))
     return int(totals["grounded"] / totals["total"] < args.min_grounded)
 
 

@@ -37,6 +37,17 @@ class GroundingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Duplicate"):
             load_replies([item, item])
 
+    def test_text_report_keeps_threshold_exit_status(self):
+        root = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [sys.executable, "-m", "grounding_eval", "examples/replies.json", "--format", "text",
+             "--min-grounded", "0.8"],
+            cwd=root, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("overall: 6/7 correct, 5/7 grounded", result.stdout)
+        self.assertIn("requires_abstention: 2/2 correct, 2/2 grounded", result.stdout)
+
     def test_fixture_report_and_threshold(self):
         root = Path(__file__).resolve().parents[1]
         result = subprocess.run(
