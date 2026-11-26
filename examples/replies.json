@@ -1,0 +1,47 @@
+[
+  {
+    "id": "spring-language",
+    "answer": "Java",
+    "citations": [
+      "spring-projects/spring-boot"
+    ]
+  },
+  {
+    "id": "spring-license",
+    "answer": "Apache-2.0",
+    "citations": [
+      "spring-projects/spring-boot"
+    ]
+  },
+  {
+    "id": "nestjs-language",
+    "answer": "TypeScript",
+    "citations": [
+      "nestjs/nest"
+    ]
+  },
+  {
+    "id": "fastapi-license",
+    "answer": "MIT",
+    "citations": [
+      "nestjs/nest"
+    ]
+  },
+  {
+    "id": "playwright-license",
+    "answer": "MIT",
+    "citations": [
+      "microsoft/playwright"
+    ]
+  },
+  {
+    "id": "playwright-budget",
+    "answer": null,
+    "citations": []
+  },
+  {
+    "id": "spring-cve-free",
+    "answer": null,
+    "citations": []
+  }
+]

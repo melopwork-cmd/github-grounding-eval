@@ -1,0 +1,44 @@
+[
+  {
+    "id": "spring-language",
+    "prompt": "What primary language does GitHub report for Spring Boot?",
+    "repository": "spring-projects/spring-boot",
+    "field": "language"
+  },
+  {
+    "id": "spring-license",
+    "prompt": "What SPDX license does GitHub report for Spring Boot?",
+    "repository": "spring-projects/spring-boot",
+    "field": "license"
+  },
+  {
+    "id": "nestjs-language",
+    "prompt": "What primary language does GitHub report for NestJS?",
+    "repository": "nestjs/nest",
+    "field": "language"
+  },
+  {
+    "id": "fastapi-license",
+    "prompt": "What SPDX license does GitHub report for FastAPI?",
+    "repository": "fastapi/fastapi",
+    "field": "license"
+  },
+  {
+    "id": "playwright-license",
+    "prompt": "What SPDX license does GitHub report for Playwright?",
+    "repository": "microsoft/playwright",
+    "field": "license"
+  },
+  {
+    "id": "playwright-budget",
+    "prompt": "What is Playwright's annual operating budget?",
+    "repository": null,
+    "field": null
+  },
+  {
+    "id": "spring-cve-free",
+    "prompt": "Can the snapshot verify that the latest Spring Boot release has zero known vulnerabilities?",
+    "repository": null,
+    "field": null
+  }
+]

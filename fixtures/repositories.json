@@ -1,0 +1,24 @@
+{
+  "repositories": {
+    "spring-projects/spring-boot": {
+      "url": "https://github.com/spring-projects/spring-boot",
+      "language": "Java",
+      "license": "Apache-2.0"
+    },
+    "nestjs/nest": {
+      "url": "https://github.com/nestjs/nest",
+      "language": "TypeScript",
+      "license": "MIT"
+    },
+    "fastapi/fastapi": {
+      "url": "https://github.com/fastapi/fastapi",
+      "language": "Python",
+      "license": "MIT"
+    },
+    "microsoft/playwright": {
+      "url": "https://github.com/microsoft/playwright",
+      "language": "TypeScript",
+      "license": "Apache-2.0"
+    }
+  }
+}
