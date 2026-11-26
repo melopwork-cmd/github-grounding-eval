@@ -72,7 +72,11 @@ class GroundingTests(unittest.TestCase):
             command = [sys.executable, "-m", "grounding_eval", str(path), "--require-all-replies"]
             result = subprocess.run(command, cwd=root, capture_output=True, text=True)
             self.assertEqual(result.returncode, 1, result.stderr)
-            self.assertIn("Missing reply", [item["reason"] for item in json.loads(result.stdout)["results"]])
+            report = json.loads(result.stdout)
+            self.assertEqual(report["missing_reply_count"], 1)
+            self.assertIn("Missing reply", [item["reason"] for item in report["results"]])
+            text_result = subprocess.run([*command, "--format", "text"], cwd=root, capture_output=True, text=True)
+            self.assertIn("missing_reply_count: 1", text_result.stdout)
 
     def test_saves_report_even_when_a_threshold_fails(self):
         root = Path(__file__).resolve().parents[1]

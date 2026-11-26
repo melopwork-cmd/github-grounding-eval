@@ -63,12 +63,14 @@ def main() -> int:
             f"{name}: {counts['correct']}/{counts['total']} correct, {counts['grounded']}/{counts['total']} grounded"
             for name, counts in {"overall": totals, **by_case_type}.items()
         ]
+        lines.append(f"missing_reply_count: {missing_count}")
         lines.extend(f"{name}: {digest}" for name, digest in digests.items())
         lines.extend(f"{result.id}: {result.reason}" for result in results)
         report = "\n".join(lines)
     else:
         report = json.dumps({
             **totals,
+            "missing_reply_count": missing_count,
             "by_case_type": by_case_type,
             **digests,
             "results": [asdict(result) for result in results],
