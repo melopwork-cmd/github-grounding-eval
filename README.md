@@ -44,3 +44,5 @@ Independent portfolio project, built with AI assistance. The evaluation and test
 Use `--format text` for a terminal summary of case counts and results. The default is JSON.
 
 `--min-abstention FRACTION` independently checks the grounded rate for cases requiring abstention. A positive threshold requires at least one such case.
+
+Both report formats include `source_sha256`, the SHA-256 of the exact evidence snapshot file used to evaluate replies.

@@ -1,3 +1,4 @@
+from hashlib import sha256
 import json
 from pathlib import Path
 import subprocess
@@ -70,6 +71,8 @@ class GroundingTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 1, result.stderr)
         report = json.loads(result.stdout)
+        snapshot = (root / "fixtures/repositories.json").read_bytes()
+        self.assertEqual(report["source_sha256"], sha256(snapshot).hexdigest())
         self.assertEqual((report["total"], report["correct"], report["grounded"]), (7, 6, 5))
         self.assertEqual(report["by_case_type"], {
             "answerable": {"total": 5, "correct": 4, "grounded": 3},
