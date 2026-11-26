@@ -5,11 +5,19 @@ from dataclasses import asdict
 import json
 from pathlib import Path
 
-from .evaluate import evaluate, load_cases, load_replies
+from .evaluate import Result, evaluate, load_cases, load_replies
 
 
 def read(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def summarize(results: list[Result]) -> dict[str, int]:
+    return {
+        "total": len(results),
+        "correct": sum(result.correct for result in results),
+        "grounded": sum(result.grounded for result in results),
+    }
 
 
 def main() -> int:
@@ -22,18 +30,22 @@ def main() -> int:
     if not 0 <= args.min_grounded <= 1:
         parser.error("--min-grounded must be between 0 and 1")
     try:
-        results = evaluate(load_cases(read(args.cases)), read(args.sources)["repositories"], load_replies(read(args.replies)))
+        cases = load_cases(read(args.cases))
+        results = evaluate(cases, read(args.sources)["repositories"], load_replies(read(args.replies)))
     except (KeyError, OSError, TypeError, ValueError) as error:
         parser.error(str(error))
-    correct = sum(result.correct for result in results)
-    grounded = sum(result.grounded for result in results)
+    grouped: dict[str, list[Result]] = {"answerable": [], "requires_abstention": []}
+    for case, result in zip(cases, results, strict=True):
+        kind = "requires_abstention" if case.repository is None else "answerable"
+        grouped[kind].append(result)
+
+    totals = summarize(results)
     print(json.dumps({
-        "total": len(results),
-        "correct": correct,
-        "grounded": grounded,
+        **totals,
+        "by_case_type": {name: summarize(group) for name, group in grouped.items()},
         "results": [asdict(result) for result in results],
     }, indent=2))
-    return int(grounded / len(results) < args.min_grounded)
+    return int(totals["grounded"] / totals["total"] < args.min_grounded)
 
 
 if __name__ == "__main__":

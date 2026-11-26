@@ -46,6 +46,10 @@ class GroundingTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         report = json.loads(result.stdout)
         self.assertEqual((report["total"], report["correct"], report["grounded"]), (7, 6, 5))
+        self.assertEqual(report["by_case_type"], {
+            "answerable": {"total": 5, "correct": 4, "grounded": 3},
+            "requires_abstention": {"total": 2, "correct": 2, "grounded": 2},
+        })
 
 
 if __name__ == "__main__":
