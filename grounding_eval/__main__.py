@@ -26,10 +26,13 @@ def main() -> int:
     parser.add_argument("--cases", type=Path, default=Path("fixtures/cases.json"))
     parser.add_argument("--sources", type=Path, default=Path("fixtures/repositories.json"))
     parser.add_argument("--min-grounded", type=float, default=0, help="Fail below this fraction (0 to 1)")
+    parser.add_argument("--min-abstention", type=float, default=0, help="Minimum grounded fraction for abstentions (0 to 1)")
     parser.add_argument("--format", choices=("json", "text"), default="json")
     args = parser.parse_args()
     if not 0 <= args.min_grounded <= 1:
         parser.error("--min-grounded must be between 0 and 1")
+    if not 0 <= args.min_abstention <= 1:
+        parser.error("--min-abstention must be between 0 and 1")
     try:
         cases = load_cases(read(args.cases))
         results = evaluate(cases, read(args.sources)["repositories"], load_replies(read(args.replies)))
@@ -42,6 +45,9 @@ def main() -> int:
 
     totals = summarize(results)
     by_case_type = {name: summarize(group) for name, group in grouped.items()}
+    abstentions = by_case_type["requires_abstention"]
+    if args.min_abstention and not abstentions["total"]:
+        parser.error("--min-abstention requires at least one abstention case")
     if args.format == "text":
         for name, counts in {"overall": totals, **by_case_type}.items():
             print(f"{name}: {counts['correct']}/{counts['total']} correct, {counts['grounded']}/{counts['total']} grounded")
@@ -53,7 +59,10 @@ def main() -> int:
             "by_case_type": by_case_type,
             "results": [asdict(result) for result in results],
         }, indent=2))
-    return int(totals["grounded"] / totals["total"] < args.min_grounded)
+    below_grounded = totals["grounded"] / totals["total"] < args.min_grounded
+    below_abstention = (abstentions["total"] > 0
+                        and abstentions["grounded"] / abstentions["total"] < args.min_abstention)
+    return int(below_grounded or below_abstention)
 
 
 if __name__ == "__main__":
