@@ -63,6 +63,20 @@ class GroundingTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1, result.stderr)
             self.assertEqual(json.loads(result.stdout)["by_case_type"]["requires_abstention"]["grounded"], 0)
 
+    def test_saves_report_even_when_a_threshold_fails(self):
+        root = Path(__file__).resolve().parents[1]
+        with TemporaryDirectory() as temp:
+            path = Path(temp) / "report.json"
+            command = [sys.executable, "-m", "grounding_eval", "examples/replies.json",
+                       "--output", str(path), "--min-grounded", "0.8"]
+            result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertEqual(result.stdout, "")
+            snapshot = path.read_text(encoding="utf-8")
+            self.assertEqual(json.loads(snapshot)["grounded"], 5)
+            self.assertEqual(subprocess.run(command, cwd=root, capture_output=True).returncode, 2)
+            self.assertEqual(path.read_text(encoding="utf-8"), snapshot)
+
     def test_fixture_report_and_threshold(self):
         root = Path(__file__).resolve().parents[1]
         result = subprocess.run(
