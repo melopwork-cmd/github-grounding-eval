@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from dataclasses import asdict
+from hashlib import sha256
 import json
 from pathlib import Path
 
@@ -35,7 +36,9 @@ def main() -> int:
         parser.error("--min-abstention must be between 0 and 1")
     try:
         cases = load_cases(read(args.cases))
-        results = evaluate(cases, read(args.sources)["repositories"], load_replies(read(args.replies)))
+        snapshot = args.sources.read_bytes()
+        sources = json.loads(snapshot.decode("utf-8"))["repositories"]
+        results = evaluate(cases, sources, load_replies(read(args.replies)))
     except (KeyError, OSError, TypeError, ValueError) as error:
         parser.error(str(error))
     grouped: dict[str, list[Result]] = {"answerable": [], "requires_abstention": []}
@@ -48,15 +51,18 @@ def main() -> int:
     abstentions = by_case_type["requires_abstention"]
     if args.min_abstention and not abstentions["total"]:
         parser.error("--min-abstention requires at least one abstention case")
+    source_sha256 = sha256(snapshot).hexdigest()
     if args.format == "text":
         for name, counts in {"overall": totals, **by_case_type}.items():
             print(f"{name}: {counts['correct']}/{counts['total']} correct, {counts['grounded']}/{counts['total']} grounded")
+        print(f"source_sha256: {source_sha256}")
         for result in results:
             print(f"{result.id}: {result.reason}")
     else:
         print(json.dumps({
             **totals,
             "by_case_type": by_case_type,
+            "source_sha256": source_sha256,
             "results": [asdict(result) for result in results],
         }, indent=2))
     below_grounded = totals["grounded"] / totals["total"] < args.min_grounded
