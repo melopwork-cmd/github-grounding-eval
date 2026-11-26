@@ -38,3 +38,7 @@ python tools/snapshot.py
 - [GitHub repository metadata API](https://docs.github.com/en/rest/repos/repos#get-a-repository)
 
 Independent portfolio project, built with AI assistance. The evaluation and tests run locally without a model API or a GitHub token.
+
+### Terminal report
+
+Use `--format text` for a terminal summary of case counts and results. The default is JSON.
