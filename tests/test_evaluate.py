@@ -63,6 +63,17 @@ class GroundingTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1, result.stderr)
             self.assertEqual(json.loads(result.stdout)["by_case_type"]["requires_abstention"]["grounded"], 0)
 
+    def test_can_require_all_replies_without_hiding_the_report(self):
+        root = Path(__file__).resolve().parents[1]
+        replies = json.loads((root / "examples/replies.json").read_text(encoding="utf-8"))
+        with TemporaryDirectory() as temp:
+            path = Path(temp) / "replies.json"
+            path.write_text(json.dumps(replies[1:]), encoding="utf-8")
+            command = [sys.executable, "-m", "grounding_eval", str(path), "--require-all-replies"]
+            result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn("Missing reply", [item["reason"] for item in json.loads(result.stdout)["results"]])
+
     def test_saves_report_even_when_a_threshold_fails(self):
         root = Path(__file__).resolve().parents[1]
         with TemporaryDirectory() as temp:
