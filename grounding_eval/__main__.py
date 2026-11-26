@@ -9,8 +9,9 @@ from pathlib import Path
 from .evaluate import Result, evaluate, load_cases, load_replies
 
 
-def read(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
+def read_snapshot(path: Path):
+    data = path.read_bytes()
+    return json.loads(data.decode("utf-8")), sha256(data).hexdigest()
 
 
 def summarize(results: list[Result]) -> dict[str, int]:
@@ -35,10 +36,11 @@ def main() -> int:
     if not 0 <= args.min_abstention <= 1:
         parser.error("--min-abstention must be between 0 and 1")
     try:
-        cases = load_cases(read(args.cases))
-        snapshot = args.sources.read_bytes()
-        sources = json.loads(snapshot.decode("utf-8"))["repositories"]
-        results = evaluate(cases, sources, load_replies(read(args.replies)))
+        case_data, cases_sha256 = read_snapshot(args.cases)
+        snapshot, source_sha256 = read_snapshot(args.sources)
+        reply_data, replies_sha256 = read_snapshot(args.replies)
+        cases = load_cases(case_data)
+        results = evaluate(cases, snapshot["repositories"], load_replies(reply_data))
     except (KeyError, OSError, TypeError, ValueError) as error:
         parser.error(str(error))
     grouped: dict[str, list[Result]] = {"answerable": [], "requires_abstention": []}
@@ -51,18 +53,19 @@ def main() -> int:
     abstentions = by_case_type["requires_abstention"]
     if args.min_abstention and not abstentions["total"]:
         parser.error("--min-abstention requires at least one abstention case")
-    source_sha256 = sha256(snapshot).hexdigest()
+    digests = {"source_sha256": source_sha256, "cases_sha256": cases_sha256, "replies_sha256": replies_sha256}
     if args.format == "text":
         for name, counts in {"overall": totals, **by_case_type}.items():
             print(f"{name}: {counts['correct']}/{counts['total']} correct, {counts['grounded']}/{counts['total']} grounded")
-        print(f"source_sha256: {source_sha256}")
+        for name, digest in digests.items():
+            print(f"{name}: {digest}")
         for result in results:
             print(f"{result.id}: {result.reason}")
     else:
         print(json.dumps({
             **totals,
             "by_case_type": by_case_type,
-            "source_sha256": source_sha256,
+            **digests,
             "results": [asdict(result) for result in results],
         }, indent=2))
     below_grounded = totals["grounded"] / totals["total"] < args.min_grounded
