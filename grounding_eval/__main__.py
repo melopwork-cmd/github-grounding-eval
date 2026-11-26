@@ -30,6 +30,7 @@ def main() -> int:
     parser.add_argument("--min-grounded", type=float, default=0, help="Fail below this fraction (0 to 1)")
     parser.add_argument("--min-abstention", type=float, default=0, help="Minimum grounded fraction for abstentions (0 to 1)")
     parser.add_argument("--format", choices=("json", "text"), default="json")
+    parser.add_argument("--require-all-replies", action="store_true", help="fail if any case has no reply")
     parser.add_argument("--output", type=Path, help="write the report to this file instead of stdout")
     args = parser.parse_args()
     if not 0 <= args.min_grounded <= 1:
@@ -41,7 +42,8 @@ def main() -> int:
         snapshot, source_sha256 = read_snapshot(args.sources)
         reply_data, replies_sha256 = read_snapshot(args.replies)
         cases = load_cases(case_data)
-        results = evaluate(cases, snapshot["repositories"], load_replies(reply_data))
+        replies = load_replies(reply_data)
+        results = evaluate(cases, snapshot["repositories"], replies)
     except (KeyError, OSError, TypeError, ValueError) as error:
         parser.error(str(error))
     grouped: dict[str, list[Result]] = {"answerable": [], "requires_abstention": []}
@@ -49,6 +51,7 @@ def main() -> int:
         kind = "requires_abstention" if case.repository is None else "answerable"
         grouped[kind].append(result)
 
+    missing_count = sum(case.id not in replies for case in cases)
     totals = summarize(results)
     by_case_type = {name: summarize(group) for name, group in grouped.items()}
     abstentions = by_case_type["requires_abstention"]
@@ -81,7 +84,7 @@ def main() -> int:
     below_grounded = totals["grounded"] / totals["total"] < args.min_grounded
     below_abstention = (abstentions["total"] > 0
                         and abstentions["grounded"] / abstentions["total"] < args.min_abstention)
-    return int(below_grounded or below_abstention)
+    return int(below_grounded or below_abstention or (args.require_all_replies and missing_count > 0))
 
 
 if __name__ == "__main__":
