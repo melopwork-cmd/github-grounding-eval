@@ -88,6 +88,20 @@ class GroundingTests(unittest.TestCase):
             self.assertEqual(subprocess.run(command, cwd=root, capture_output=True).returncode, 2)
             self.assertEqual(path.read_text(encoding="utf-8"), snapshot)
 
+    def test_case_selection_preserves_fixture_order_and_rejects_unknown_ids(self):
+        root = Path(__file__).resolve().parents[1]
+        cases = json.loads((root / "fixtures/cases.json").read_text(encoding="utf-8"))
+        first, second = (case["id"] for case in cases[:2])
+        command = [sys.executable, "-m", "grounding_eval", "examples/replies.json"]
+        result = subprocess.run([*command, "--case-id", second, "--case-id", first],
+                                cwd=root, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([item["id"] for item in json.loads(result.stdout)["results"]], [first, second])
+        error = subprocess.run([*command, "--case-id", "unknown-selection"],
+                               cwd=root, capture_output=True, text=True)
+        self.assertEqual(error.returncode, 2, error.stderr)
+        self.assertIn("Unknown selected case IDs: unknown-selection", error.stderr)
+
     def test_fixture_report_and_threshold(self):
         root = Path(__file__).resolve().parents[1]
         result = subprocess.run(

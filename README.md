@@ -52,3 +52,5 @@ Both report formats include `source_sha256`, the SHA-256 of the exact evidence s
 Use `--output report.json` or `--format text --output report.txt` to store a report in a new file. Reports are saved even when a threshold fails.
 
 `--require-all-replies` returns status 1 when a case has no reply. A reply with a null answer still counts as a supplied reply.
+
+Pass `--case-id ID` to evaluate one specific case. Repeat it to run several cases in fixture order.

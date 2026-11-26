@@ -26,6 +26,7 @@ def main() -> int:
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("replies", type=Path, help="JSON array of model replies")
     parser.add_argument("--cases", type=Path, default=Path("fixtures/cases.json"))
+    parser.add_argument("--case-id", action="append", help="evaluate only this ID (repeat to select several)")
     parser.add_argument("--sources", type=Path, default=Path("fixtures/repositories.json"))
     parser.add_argument("--min-grounded", type=float, default=0, help="Fail below this fraction (0 to 1)")
     parser.add_argument("--min-abstention", type=float, default=0, help="Minimum grounded fraction for abstentions (0 to 1)")
@@ -43,6 +44,14 @@ def main() -> int:
         reply_data, replies_sha256 = read_snapshot(args.replies)
         cases = load_cases(case_data)
         replies = load_replies(reply_data)
+        if args.case_id:
+            requested = set(args.case_id)
+            known = {case.id for case in cases}
+            if unknown := requested - known:
+                raise ValueError("Unknown selected case IDs: " + ", ".join(sorted(unknown)))
+            unselected = known - requested
+            cases = [case for case in cases if case.id in requested]
+            replies = {case_id: reply for case_id, reply in replies.items() if case_id not in unselected}
         results = evaluate(cases, snapshot["repositories"], replies)
     except (KeyError, OSError, TypeError, ValueError) as error:
         parser.error(str(error))
