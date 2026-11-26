@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 import unittest
 
 from grounding_eval.evaluate import Case, Reply, evaluate, load_replies
@@ -47,6 +48,19 @@ class GroundingTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn("overall: 6/7 correct, 5/7 grounded", result.stdout)
         self.assertIn("requires_abstention: 2/2 correct, 2/2 grounded", result.stdout)
+
+    def test_abstention_threshold_is_independent_of_overall_score(self):
+        root = Path(__file__).resolve().parents[1]
+        replies = json.loads((root / "examples/replies.json").read_text(encoding="utf-8"))
+        with TemporaryDirectory() as temp:
+            path = Path(temp) / "replies.json"
+            path.write_text(json.dumps([reply for reply in replies if reply["answer"] is not None]), encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, "-m", "grounding_eval", str(path), "--min-abstention", "0.5"],
+                cwd=root, capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["by_case_type"]["requires_abstention"]["grounded"], 0)
 
     def test_fixture_report_and_threshold(self):
         root = Path(__file__).resolve().parents[1]
