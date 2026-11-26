@@ -11,6 +11,8 @@ python -m grounding_eval examples/replies.json
 python -m unittest discover -s tests -v
 ~~~
 
+Pass `--case-id ID` to evaluate one specific case. Repeat it to run several cases in fixture order.
+
 The included example has 7 answers, 6 correct answers, and 5 grounded answers. One example cites an unrelated repository and one gives the wrong license. The last two questions exercise abstention when a fact is absent from the snapshot. The JSON report includes separate counts for answerable cases and cases that require abstention.
 
 To gate a run in CI, add --min-grounded followed by a fraction between 0 and 1. For example, a threshold of 0.8 fails the supplied example.
@@ -52,5 +54,3 @@ Both report formats include `source_sha256`, the SHA-256 of the exact evidence s
 Use `--output report.json` or `--format text --output report.txt` to store a report in a new file. Reports are saved even when a threshold fails.
 
 `--require-all-replies` returns status 1 when a case has no reply. A reply with a null answer still counts as a supplied reply.
-
-Pass `--case-id ID` to evaluate one specific case. Repeat it to run several cases in fixture order.
